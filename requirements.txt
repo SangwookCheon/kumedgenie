@@ -5,6 +5,7 @@ langchain_community
 chromadb
 python-dotenv
 tiktoken
+faiss-cpu
 pypdf
 pdfminer.six
 unstructured[pdf]
