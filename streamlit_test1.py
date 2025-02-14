@@ -4,30 +4,37 @@ import glob
 import warnings
 from dotenv import load_dotenv
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.document_loaders import (
     PyPDFLoader,
-    UnstructuredMarkdownLoader, # NOTE: This is throwing me NLTK errors
+    UnstructuredMarkdownLoader,  # NOTE: This may require NLTK
     UnstructuredWordDocumentLoader,
     TextLoader
 )
 from langchain_core.prompts import PromptTemplate
+
+# Load environment variables
 load_dotenv()
-# Suppress warnings (e.g., PyPDFLoader warnings)
+
+# Suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # Set API Key
-os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if not openai_api_key:
+    st.error("❌ OPENAI_API_KEY is missing. Please set it in `.env` or Streamlit Secrets.")
+else:
+    os.environ["OPENAI_API_KEY"] = openai_api_key
 
 # Streamlit UI
 st.title("🔍 고려대 의과대학 정보 지니")
 
-# Define document storage folder and database path
+# Define document storage folder
 DOC_FOLDER = "resources"
-CHROMA_DB_PATH = "./chroma_db"
+FAISS_INDEX_PATH = "faiss_index"
 
 # Define supported file loaders
 FILE_LOADERS = {
@@ -37,15 +44,15 @@ FILE_LOADERS = {
     "docx": UnstructuredWordDocumentLoader,
 }
 
-# Check if ChromaDB already exists
-if os.path.exists(CHROMA_DB_PATH):
+# Check if FAISS index exists
+if os.path.exists(FAISS_INDEX_PATH):
     st.success("✅ 기존 데이터를 불러왔습니다. 바로 질문하세요!")
-    vectorstore = Chroma(persist_directory=CHROMA_DB_PATH, embedding_function=OpenAIEmbeddings())
+    vectorstore = FAISS.load_local(FAISS_INDEX_PATH, OpenAIEmbeddings(), allow_dangerous_deserialization=True)
     retriever = vectorstore.as_retriever()
 else:
-    # If no database exists, process documents
+    # If no FAISS index exists, process documents
     st.warning("📂 문서를 처음 로딩 중입니다... 잠시만 기다려 주세요.")
-    
+
     all_files = []
     for ext in FILE_LOADERS.keys():
         all_files.extend(glob.glob(os.path.join(DOC_FOLDER, f"*.{ext}")))
@@ -65,13 +72,11 @@ else:
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         splits = text_splitter.split_documents(all_documents)
 
-        # Embed and store in ChromaDB
-        vectorstore = Chroma.from_documents(
-            documents=splits,
-            embedding=OpenAIEmbeddings(),
-            persist_directory=CHROMA_DB_PATH
-        )
+        # Embed and store in FAISS
+        vectorstore = FAISS.from_documents(splits, OpenAIEmbeddings())
+        vectorstore.save_local(FAISS_INDEX_PATH)  # Save index
         retriever = vectorstore.as_retriever()
+
         st.success("✅ 문서가 성공적으로 저장되었습니다! 질문하세요.")
 
 # Custom RAG prompt
