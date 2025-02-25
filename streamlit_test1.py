@@ -15,6 +15,7 @@ from langchain_community.document_loaders import (
     TextLoader
 )
 from langchain_core.prompts import PromptTemplate
+from langchain_core.documents import Document
 
 # Load environment variables
 load_dotenv()
@@ -33,7 +34,7 @@ else:
 st.title("🔍 고려대 의과대학 정보 지니")
 
 # Define document storage folder
-DOC_FOLDER = "resources"
+DOC_FOLDER = "temp_rec"
 FAISS_INDEX_PATH = "faiss_index"
 
 # Define supported file loaders
@@ -69,13 +70,18 @@ else:
                 all_documents.extend(documents)
 
         # Split documents
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000,
+                                                       chunk_overlap=200,
+                                                       separators=["\n# ", "\n## ", "\n### "])
         splits = text_splitter.split_documents(all_documents)
+
+        for i, doc in enumerate(splits[:3]):
+            print(f"\nChunk {i+1}:\n{doc.page_content}\n")
 
         # Embed and store in FAISS
         vectorstore = FAISS.from_documents(splits, OpenAIEmbeddings())
         vectorstore.save_local(FAISS_INDEX_PATH)  # Save index
-        retriever = vectorstore.as_retriever()
+        retriever = vectorstore.as_retriever() #search_kwargs={"k": 5}
 
         st.success("✅ 문서가 성공적으로 저장되었습니다! 질문하세요.")
 
