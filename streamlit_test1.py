@@ -31,7 +31,7 @@ else:
     os.environ["OPENAI_API_KEY"] = openai_api_key
 
 # Streamlit UI
-st.title("🔍 고려대 의과대학 정보 지니")
+st.title("🐯🔍🧞‍♀️ 고려대 의과대학 정보 지니")
 
 # Define document storage folder
 DOC_FOLDER = "temp_rec"
@@ -49,7 +49,7 @@ FILE_LOADERS = {
 if os.path.exists(FAISS_INDEX_PATH):
     st.success("✅ 기존 데이터를 불러왔습니다. 바로 질문하세요!")
     vectorstore = FAISS.load_local(FAISS_INDEX_PATH, OpenAIEmbeddings(), allow_dangerous_deserialization=True)
-    retriever = vectorstore.as_retriever()
+    retriever = vectorstore.as_retriever() #search_kwargs={"k": 5}
 else:
     # If no FAISS index exists, process documents
     st.warning("📂 문서를 처음 로딩 중입니다... 잠시만 기다려 주세요.")
@@ -67,6 +67,11 @@ else:
             if ext in FILE_LOADERS:
                 loader = FILE_LOADERS[ext](file_path)
                 documents = loader.load()
+
+                # Store file source metadata for each document
+                for doc in documents:
+                    doc.metadata["source"] = os.path.basename(file_path)  # Store only filename, not full path
+
                 all_documents.extend(documents)
 
         # Split documents
@@ -75,8 +80,12 @@ else:
                                                        separators=["\n# ", "\n## ", "\n### "])
         splits = text_splitter.split_documents(all_documents)
 
-        for i, doc in enumerate(splits[:3]):
-            print(f"\nChunk {i+1}:\n{doc.page_content}\n")
+        # for i, doc in enumerate(splits[:3]):
+        #     print(f"\nChunk {i+1}:\n{doc.page_content}\n")
+
+        # Verify chunks
+        # for i, doc in enumerate(splits[:3]):
+        #     print(f"\nChunk {i+1} (Source: {doc.metadata.get('source', 'Unknown')}):\n{doc.page_content}\n")
 
         # Embed and store in FAISS
         vectorstore = FAISS.from_documents(splits, OpenAIEmbeddings())
@@ -93,12 +102,12 @@ custom_prompt = PromptTemplate(
         "모든 답변은 **한국어**로 작성되어야 하며, 정중하고 공식적인 톤을 유지하고, 개인적인 의견이 없어야 됩니다. 출처에서 제공되는 사실만 말하고 확대 해석하지 마세요."
         """가능한 경우, 출처에서 직접 인용(\" \")하고, 관련 조항이 있으면 생략하지 말고 나열하세요.
         또한, 학점, 기간, 비용, 시간, 수업 번호, 웹페이지 링크, 조항 등 수치적 또는 구체적인 정보가 있으면 생략하지 말고 제공하세요. 
-        test.txt에는 관련 웹사이트 링크가 나열되어 있는데 질문에 관련된 웹사이트 링크를 마지막 줄에 "관련 웹페이지: "쓰고 링크 작성하세요. 
         질문이 지나치게 정확하지 않은 것 같으면 질문이 정확한지 확인하거나 조금 더 구체적으로 질문해 달라고 부탁하세요. 
+        반드시 출처를 유지하세요. 각 정보가 어느 문서에서 왔는지 명확히 밝히세요.
         출처에서 정보가 정확하지 않으면 관련 정보를 다시 확인하라고 하세요. 그렇지 않으면 마지막에 '이 정보는 정확하지 않을 수 있습니다.'라는 경고 문구를 포함하세요. \n\n"""
         "**질문:** {question}\n"
         "**출처:**\n{context}\n\n"
-        "**답변:**"
+        "**답변 (출처 포함):**"
     )
 )
 
@@ -107,7 +116,13 @@ llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
 
 # Define RAG chain
 def format_docs(docs):
-    return "\n\n".join(doc.page_content for doc in docs)
+    formatted_texts = []
+    
+    for doc in docs:
+        source = doc.metadata.get("source", "Unknown Source")  # Get source filename
+        formatted_texts.append(f"{doc.page_content}\n\n📌 출처: {source}")  # Append source after content
+    
+    return "\n\n---\n\n".join(formatted_texts)  # Separate retrieved chunks with "---"
 
 rag_chain = (
     {"context": retriever | format_docs, "question": RunnablePassthrough()}
