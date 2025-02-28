@@ -28,6 +28,8 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 # Set API Key
 openai_api_key = os.getenv("OPENAI_API_KEY")
+prompt_text = os.getenv("PROMPT_TEMPLATE")
+
 if not openai_api_key:
     st.error("❌ OPENAI_API_KEY is missing. Please set it in `.env` or Streamlit Secrets.")
 else:
@@ -38,7 +40,8 @@ if "retrieved_chunks" not in st.session_state:
     st.session_state["retrieved_chunks"] = []
 
 # Streamlit UI
-st.title("🐯🔍🧞‍♀️ 고려대 의과대학 정보 지니")
+st.title("🐯🔍 고려대 의과대학 정보 지니")
+st.write("지니는 신입생 수강 신청 정보와 유용한 팁, 고려대학교 의과대학 학칙(휴·복학, 이중 전공, 장학생 기준 등)에 대한 궁금증을 해결해 드립니다!")
 
 # Define document storage folder
 DOC_FOLDER = "temp_rec"
@@ -96,16 +99,7 @@ else:
 # Custom RAG prompt
 custom_prompt = PromptTemplate(
     input_variables=["context", "question"],
-    template=(
-        "질문을 할 학생은 고려대 의대생이고, 다음 질문에 대한 답변을 한국어로 정중하고 공식적인 톤으로 제공하세요. "
-        """개인적인 의견이나 사실을 유추하는 등 추측하지 말고, 가능한 경우, 출처에서 직접 인용(\" \")하고, 관련 조항이 있으면 생략하지 말고 나열하세요.
-        또한, 학점, 기간, 비용, 시간, 수업 번호, 웹페이지 링크, 조항 등 수치적 또는 구체적인 정보가 있으면 생략하지 말고 제공하세요. 
-        질문에 대한 답변이 주어진 정보를 참고해도 지나치게 부정확하다고 판단되면 "질문을 더 구체적으로 해주세요!"라고 말하세요. 
-        마지막에는 "아래 출처를 확인하여 더 정확한 정보를 얻거나 학생회, 또는 의과대학 행정실 (02-2286-1125)로 문의하세요."라는 문구를 적으세요. \n\n"""
-        "**핫앵의 질문:** {question}\n"
-        "**관련 정보:**\n{context}\n\n"
-        "**답변:**"
-    )
+    template=prompt_text
 )
 
 # Set up LLM
@@ -140,7 +134,7 @@ rag_chain = (
 
 # User input field
 with st.form(key="question_form"):
-    query = st.text_input("질문하세요:")
+    query = st.text_input("질문하세요 (질문이 구체적일수록 더욱 정확한 답변을 받을 수 있습니다):")
     submit_button = st.form_submit_button("Submit")
 
 if submit_button:
@@ -167,3 +161,14 @@ if submit_button:
 
     else:
         st.warning("질문이 올바르지 않습니다. 다시 질문해 주세요.")
+    
+
+st.markdown(
+"""
+<hr style="margin-top: 50px;">
+<p style="text-align: center; font-size: 14px;">
+    Made with ❤️ by Wookie at &lt;/+/&gt;
+</p>
+""",
+unsafe_allow_html=True
+)
