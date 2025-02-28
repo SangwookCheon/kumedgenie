@@ -8,3 +8,6 @@ TODO: 중요한 announcement - 장학금 신청날짜 등 이런거는 front pag
 TODO: Include image/diagram support 
 TODO: 질문이 너무 애매한거 같으면 답을 해주지 말고 다시 하라고 하기.
 TODO: 이게 학생회에서 제공하는 정보가 중요하기 때문에 학생회랑 긴밀히 협력해야함 - acknolwedge their contribution, etc.
+
+준원: 식단표
+lim: 조회수 visitor count. 
