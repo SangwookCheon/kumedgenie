@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import glob
 import warnings
+import pandas as pd
 from dotenv import load_dotenv
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
@@ -16,6 +17,9 @@ from langchain_community.document_loaders import (
 )
 from langchain_core.prompts import PromptTemplate
 from langchain_community.callbacks import get_openai_callback
+
+#custom functions
+from visit_counter import get_visit_count, update_visit_count, get_last_visit, update_last_visit  # Import visit tracking
 
 # Load environment variables
 load_dotenv()
@@ -38,6 +42,12 @@ else:
 # Initialize session state for retrieved chunks
 if "retrieved_chunks" not in st.session_state:
     st.session_state["retrieved_chunks"] = []
+
+
+# Visit Counter implementation
+visit_count = update_visit_count()
+last_visit = get_last_visit()
+update_last_visit()
 
 # Streamlit UI
 st.title("🐯🔍 고려대 의과대학 정보 지니")
@@ -68,7 +78,7 @@ else:
         all_files.extend(glob.glob(os.path.join(DOC_FOLDER, f"*.{ext}")))
 
     if not all_files:
-        st.error("❌ 지원되는 문서가 없습니다. `resources` 폴더에 파일을 추가해 주세요.")
+        st.error("❌ 지원되는 문서가 없습니다")
     else:
         all_documents = []
         for file_path in all_files:
@@ -149,7 +159,7 @@ if submit_button:
         st.write("### 지니의 답변:")
         st.write(response)
 
-        # **Add an expandable section for the retrieved chunks**
+        # Add an expandable section for the retrieved chunks
         with st.expander("📌 출처 표시"):
             if "retrieved_chunks" in st.session_state and st.session_state["retrieved_chunks"]:
                 st.write("### 📌 참고한 문서 내용:")
@@ -164,7 +174,7 @@ if submit_button:
     
 
 st.markdown(
-"""
+f"""
 <hr style="margin-top: 50px;">
 <p style="text-align: center; font-size: 14px;">
     Made with ❤️ by Wookie at &lt;/+/&gt;
@@ -172,3 +182,5 @@ st.markdown(
 """,
 unsafe_allow_html=True
 )
+
+#    방문 횟수: {visit_count}회 | 마지막 방문: {last_visit} <br>

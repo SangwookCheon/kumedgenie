@@ -2,6 +2,7 @@
 
 준원: 나눠서 할때 각 카테고리별로 문서가 많지 않으면 토픽별로 나눠서 해보기
 
+TODO: Automatically update FAISS when website open if new files are added to resources. 
 TODO: Highlight relevant information from the 출처 표시 so the student can see where the information comes from. 
 TODO: External sidebars/links
 TODO: 중요한 announcement - 장학금 신청날짜 등 이런거는 front page에 display function - recent news aggregator.
