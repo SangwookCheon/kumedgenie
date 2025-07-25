@@ -18,6 +18,8 @@ from langchain_community.document_loaders import (
 from langchain_core.prompts import PromptTemplate
 from langchain_community.callbacks import get_openai_callback
 
+# KUMEDGENIE 
+
 #custom functions
 from visit_counter import get_visit_count, update_visit_count, get_last_visit, update_last_visit  # Import visit tracking
 
