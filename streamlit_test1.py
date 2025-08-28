@@ -381,11 +381,14 @@ if submit_button:
     else:
         st.warning("질문이 올바르지 않습니다. 다시 질문해 주세요.")
 
+version_display = remote_version if remote_version else "알 수 없음"
+
 st.markdown(
 f"""
 <hr style="margin-top: 50px;">
 <p style="text-align: center; font-size: 14px;">
-    Made with ❤️ by Wookie at &lt;/+/&gt;
+    Made with ❤️ by Wookie at &lt;/+/&gt;<br>
+    <span style="font-size:12px; color:gray;">버전: {version_display}</span>
 </p>
 """,
 unsafe_allow_html=True
