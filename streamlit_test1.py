@@ -26,7 +26,7 @@ from typing import Optional
 # KUMEDGENIE 
 
 #custom functions
-from visit_counter import get_visit_count, update_visit_count, get_last_visit, update_last_visit  # Import visit tracking
+# from visit_counter import get_visit_count, update_visit_count, get_last_visit, update_last_visit  # Import visit tracking
 
 # Load environment variables
 load_dotenv()
@@ -51,9 +51,9 @@ if "retrieved_chunks" not in st.session_state:
     st.session_state["retrieved_chunks"] = []
 
 # Visit Counter implementation
-visit_count = update_visit_count()
-last_visit = get_last_visit()
-update_last_visit()
+# visit_count = update_visit_count()
+# last_visit = get_last_visit()
+# update_last_visit()
 
 # Streamlit UI
 st.title("🐯🔍 고려대 의과대학 정보 지니")
@@ -77,8 +77,8 @@ FILE_LOADERS = {
 GITHUB_OWNER = "SangwookCheon"
 GITHUB_REPO = "kumedgenie"
 GITHUB_BRANCH = "main"
-GITHUB_DOC_PATH = "temp_rec"  # folder in the repo that holds your docs
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # optional; required for private repos or high traffic
+GITHUB_DOC_PATH = "temp_rec"  # folder in the repo that holds resources
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # for private repos or high traffic. This is github's fine grained token.
 
 def _github_headers():
     h = {"Accept": "application/vnd.github+json"}
@@ -172,9 +172,9 @@ def sync_docs_from_github():
 
 # Use GitHub raw for live; keep your local fake line commented for dev
 REMOTE_VERSION_URL = "https://raw.githubusercontent.com/SangwookCheon/kumedgenie/main/temp_rec/version.txt"
-# REMOTE_VERSION_URL = "file:///" + os.path.abspath("fake_remote_version.txt")
+# REMOTE_VERSION_URL = "file:///" + os.path.abspath("fake_remote_version.txt") - only for testing.
 
-LOCAL_VERSION_PATH = os.path.join(FAISS_INDEX_PATH, "version.txt")
+LOCAL_VERSION_PATH = os.path.join(FAISS_INDEX_PATH, "version.txt") # only for testing
 
 # ---- cached version fetch (prevents hammering GitHub) ----
 @st.cache_data(ttl=60, show_spinner=False)
